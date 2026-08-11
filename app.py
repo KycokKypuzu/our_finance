@@ -6,6 +6,7 @@ import uuid
 
 import pandas as pd
 from fastapi import FastAPI, Request, UploadFile, File, Form
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -20,6 +21,8 @@ if not USERS_FILE.exists():
 
 app = FastAPI(title="Мои финансы")
 app.add_middleware(SessionMiddleware, secret_key="local-finance-service-secret")
+
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
