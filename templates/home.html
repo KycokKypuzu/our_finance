@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h1 class="h3 mb-1">Привет, {{ username }}!</h1>
+    <p class="text-muted mb-5">Что будем делать?</p>
+
+    <div class="main-buttons d-flex flex-column align-items-center gap-3">
+        <a href="/finances" class="btn btn-primary">Мои финансы</a>
+        <a href="/new" class="btn btn-success">Новая запись</a>
+    </div>
+</div>
+{% endblock %}

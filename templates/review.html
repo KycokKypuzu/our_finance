@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'edit' %}Редактирование{% else %}Проверка записи{% endif %}{% endblock %}
+{% block content %}
+<form method="post" action="{% if mode == 'edit' %}/finance/edit/save{% else %}/new/continue{% endif %}" id="review-form">
+    <input type="hidden" name="draft_id" value="{{ draft_id }}">
+    <input type="hidden" name="payload" id="review-payload" value="">
+
+    <div class="card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1 class="h3 mb-1">{% if mode == 'edit' %}Редактирование записи{% else %}Проверка данных{% endif %}</h1>
+                <div class="text-muted">{{ data.username }} · {{ data.month }}.{{ data.year }}</div>
+            </div>
+            <a href="{% if mode == 'edit' %}/finance/{{ data.month }}/{{ data.year }}{% else %}/home{% endif %}" class="btn btn-outline-secondary">Отмена</a>
+        </div>
+        {% if message %}
+        <div class="alert alert-info mt-3 mb-0">{{ message }}</div>
+        {% endif %}
+    </div>
+
+    <h2 class="h4 mb-3">Расходы</h2>
+    {% for bank, items in data.outcome.items() %}
+    <div class="card p-3 mb-4">
+        <h3 class="h5">{{ bank }}</h3>
+        <div class="table-wrap">
+        <table class="table table-sm align-middle">
+            <thead><tr>
+                <th>Дата</th><th>Сумма платежа</th><th>Описание</th><th>Комментарий</th>
+                <th>Категория</th><th>Лишнее</th><th>Единоразовое</th><th></th>
+            </tr></thead>
+            <tbody>
+            {% for item in items %}
+            <tr data-kind="outcome" data-bank="{{ bank }}">
+                <td><input class="form-control form-control-sm" data-field="date" value="{{ item.date }}"></td>
+                <td><input class="form-control form-control-sm" data-field="value" value="{{ item.value }}"></td>
+                <td><input class="form-control form-control-sm" data-field="description" value="{{ item.description }}"></td>
+                <td><input class="form-control form-control-sm" data-field="comment" value="{{ item.comment }}"></td>
+                <td><input class="form-control form-control-sm" data-field="category" value="{{ item.category }}"></td>
+                <td class="text-center"><input type="checkbox" data-field="unnecessary_flag" {% if item.unnecessary_flag %}checked{% endif %}></td>
+                <td class="text-center"><input type="checkbox" data-field="onetime_flag" {% if item.onetime_flag %}checked{% endif %}></td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-row" title="Удалить строку">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% endfor %}
+
+    <h2 class="h4 mb-3">Доходы</h2>
+    {% for bank, items in data.income.items() %}
+    <div class="card p-3 mb-4">
+        <h3 class="h5">{{ bank }}</h3>
+        <div class="table-wrap">
+        <table class="table table-sm align-middle">
+            <thead><tr><th>Дата</th><th>Сумма платежа</th><th>Описание</th><th>Категория</th><th></th></tr></thead>
+            <tbody>
+            {% for item in items %}
+            <tr data-kind="income" data-bank="{{ bank }}">
+                <td><input class="form-control form-control-sm" data-field="date" value="{{ item.date }}"></td>
+                <td><input class="form-control form-control-sm" data-field="value" value="{{ item.value }}"></td>
+                <td><input class="form-control form-control-sm" data-field="description" value="{{ item.description }}"></td>
+                <td><input class="form-control form-control-sm" data-field="category" value="{{ item.category }}"></td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-row" title="Удалить строку">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="d-flex gap-2 mb-5 flex-wrap">
+        {% if mode == 'edit' %}
+            <button type="submit" class="btn btn-success">Сохранить изменения</button>
+        {% else %}
+            <button type="submit" class="btn btn-outline-primary" formaction="/new/continue">Продолжить к обзору</button>
+            <a href="/new/bank/{{ draft_id }}" class="btn btn-outline-success">+ Добавить ещё банк</a>
+            <button type="submit" class="btn btn-success" formaction="/new/save">Сохранить общий отчёт</button>
+        {% endif %}
+    </div>
+</form>
+
+<script>
+(function () {
+    const form = document.getElementById('review-form');
+    const payloadInput = document.getElementById('review-payload');
+
+    // Удаляем строку только визуально. При подготовке payload она просто
+    // не попадёт в JSON, поэтому серверу не нужно получать отдельное поле
+    // для каждой строки.
+    document.querySelectorAll('.delete-row').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const row = button.closest('tr');
+            row.dataset.deleted = '1';
+            row.classList.add('d-none');
+        });
+    });
+
+    form.addEventListener('submit', function() {
+        const payload = { outcome: {}, income: {} };
+
+        document.querySelectorAll('tr[data-kind][data-bank]').forEach(function(row) {
+            if (row.dataset.deleted === '1') return;
+
+            const kind = row.dataset.kind;
+            const bank = row.dataset.bank;
+            if (!payload[kind][bank]) payload[kind][bank] = [];
+
+            const item = {};
+            row.querySelectorAll('[data-field]').forEach(function(input) {
+                const field = input.dataset.field;
+                item[field] = input.type === 'checkbox' ? input.checked : input.value;
+            });
+
+            payload[kind][bank].push(item);
+        });
+
+        // В форме теперь всего несколько полей: draft_id + один payload.
+        // Поэтому даже тысячи строк выписки не упираются в лимит 1000 form fields.
+        payloadInput.value = JSON.stringify(payload);
+    });
+})();
+</script>
+{% endblock %}

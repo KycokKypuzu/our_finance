@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Новая запись{% endblock %}
+{% block content %}
+<div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Новая запись</h1>
+        <a href="/home" class="btn btn-outline-secondary">На главную</a>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <p class="text-muted">Сначала выберите месяц. Затем можно последовательно загрузить выписки из нескольких банков — все они попадут в один JSON-отчёт.</p>
+
+    <form method="post" action="/new/upload" enctype="multipart/form-data">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Год</label>
+                <select name="year" class="form-select" required>
+                    {% for year in years %}
+                    <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Месяц</label>
+                <select name="month" class="form-select" required>
+                    {% for month in months %}
+                    <option value="{{ month }}">{{ month }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Название первого банка</label>
+                <input name="bank" class="form-control" placeholder="Например, Т-Банк" required>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Выписка первого банка — CSV или XLSX</label>
+                <input type="file" name="file" class="form-control" accept=".csv,.xlsx" required>
+            </div>
+        </div>
+
+        <button class="btn btn-success mt-4">Загрузить выписку</button>
+    </form>
+</div>
+{% endblock %}

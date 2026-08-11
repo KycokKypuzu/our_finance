@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Выбор столбцов{% endblock %}
+{% block content %}
+<div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Выберите столбцы</h1>
+            <div class="text-muted">Банк: {{ bank }}</div>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <p class="text-muted">Первая строка файла считается заголовком.</p>
+
+    <form method="post" action="/new/process">
+        <input type="hidden" name="draft_id" value="{{ draft_id }}">
+
+        <div class="row g-3">
+            {% for name, label in [
+                ("date_col", "Дата"),
+                ("value_col", "Сумма"),
+                ("description_col", "Описание"),
+                ("category_col", "Категория")
+            ] %}
+            <div class="col-md-6">
+                <label class="form-label">{{ label }}</label>
+                <select name="{{ name }}" class="form-select" required>
+                    {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2 class="h5 mt-4">Предпросмотр файла</h2>
+        <div class="table-wrap">
+            <table class="table table-sm table-bordered">
+                <thead><tr>{% for c in columns %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                {% for row in sample_rows %}
+                    <tr>{% for c in columns %}<td>{{ row[c] }}</td>{% endfor %}</tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn btn-primary mt-3">Сформировать записи для {{ bank }}</button>
+    </form>
+</div>
+{% endblock %}

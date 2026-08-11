@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Анализ {{ data.month }}.{{ data.year }}{% endblock %}
+{% block content %}
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1 class="h3 mb-1">Анализ финансов</h1>
+            <div class="text-muted">{{ data.username }} · {{ data.month }}.{{ data.year }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/finance/{{ data.month }}/{{ data.year }}" class="btn btn-outline-secondary">К записи</a>
+            <a href="/home" class="btn btn-outline-secondary">На главную</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-5">
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <div class="text-muted">Сумма всех расходов</div>
+            <div class="display-6 fw-semibold">{{ "%.2f"|format(analysis.outcome_total) }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <div class="text-muted">Сумма всех доходов</div>
+            <div class="display-6 fw-semibold">{{ "%.2f"|format(analysis.income_total) }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <div class="text-muted">Разница доходов и расходов</div>
+            <div class="display-6 fw-semibold">{{ "%.2f"|format(analysis.difference) }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-4 mb-4">
+    <h2 class="h4 mb-4">Расходы по категориям</h2>
+    {% if analysis.category_chart %}
+        {% set max_value = analysis.category_chart[0].value %}
+        {% for item in analysis.category_chart %}
+        <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+                <span>{{ item.label }}</span>
+                <strong>{{ "%.2f"|format(item.value) }}</strong>
+            </div>
+            <div class="progress" style="height: 28px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ (item.value / max_value * 100) if max_value else 0 }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-muted">Нет расходов.</div>
+    {% endif %}
+</div>
+
+<div class="card p-4 mb-5">
+    <h2 class="h4 mb-2">Структура расходов</h2>
+    <p class="text-muted">Суммы расходов по признакам «лишнее» и «единоразовое», а также обычные расходы без этих признаков.</p>
+    {% set max_flag_value = analysis.flags_chart|map(attribute='value')|max %}
+    {% for item in analysis.flags_chart %}
+    <div class="mb-3">
+        <div class="d-flex justify-content-between mb-1">
+            <span>{{ item.label }}</span>
+            <strong>{{ "%.2f"|format(item.value) }}</strong>
+        </div>
+        <div class="progress" style="height: 28px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ (item.value / max_flag_value * 100) if max_flag_value else 0 }}%;"></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
