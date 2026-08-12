@@ -18,63 +18,79 @@
         {% endif %}
     </div>
 
-    <h2 class="h4 mb-3">Расходы</h2>
-    {% for bank, items in data.outcome.items() %}
-    <div class="card p-3 mb-4">
-        <h3 class="h5">{{ bank }}</h3>
-        <div class="table-wrap">
-        <table class="table table-sm align-middle">
-            <thead><tr>
-                <th>Дата</th><th>Сумма платежа</th><th>Описание</th><th>Комментарий</th>
-                <th>Категория</th><th>Лишнее</th><th>Единоразовое</th><th></th>
-            </tr></thead>
-            <tbody>
-            {% for item in items %}
-            <tr data-kind="outcome" data-bank="{{ bank }}">
-                <td><input class="form-control form-control-sm" data-field="date" value="{{ item.date }}"></td>
-                <td><input class="form-control form-control-sm" data-field="value" value="{{ item.value }}"></td>
-                <td><input class="form-control form-control-sm" data-field="description" value="{{ item.description }}"></td>
-                <td><input class="form-control form-control-sm" data-field="comment" value="{{ item.comment }}"></td>
-                <td><input class="form-control form-control-sm" data-field="category" value="{{ item.category }}"></td>
-                <td class="text-center"><input type="checkbox" data-field="unnecessary_flag" {% if item.unnecessary_flag %}checked{% endif %}></td>
-                <td class="text-center"><input type="checkbox" data-field="onetime_flag" {% if item.onetime_flag %}checked{% endif %}></td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-danger delete-row" title="Удалить строку">✕</button>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+    <section id="outcome-section">
+        <h2 class="h4 mb-3">Расходы</h2>
+        <div id="outcome-banks">
+        {% for bank, items in data.outcome.items() %}
+        <div class="card p-3 mb-4 bank-card" data-kind="outcome" data-bank="{{ bank }}">
+            <h3 class="h5 bank-title">{{ bank }}</h3>
+            <div class="table-wrap">
+            <table class="table table-sm align-middle">
+                <thead><tr>
+                    <th>Дата</th><th>Сумма платежа</th><th>Описание</th><th>Комментарий</th>
+                    <th>Категория</th><th>Лишнее</th><th>Единоразовое</th><th></th>
+                </tr></thead>
+                <tbody class="bank-rows">
+                {% for item in items %}
+                <tr data-kind="outcome" data-bank="{{ bank }}">
+                    <td><input class="form-control form-control-sm" data-field="date" value="{{ item.date }}"></td>
+                    <td><input class="form-control form-control-sm" data-field="value" value="{{ item.value }}"></td>
+                    <td><input class="form-control form-control-sm" data-field="description" value="{{ item.description }}"></td>
+                    <td><input class="form-control form-control-sm" data-field="comment" value="{{ item.comment }}"></td>
+                    <td><input class="form-control form-control-sm" data-field="category" value="{{ item.category }}"></td>
+                    <td class="text-center"><input type="checkbox" data-field="unnecessary_flag" {% if item.unnecessary_flag %}checked{% endif %}></td>
+                    <td class="text-center"><input type="checkbox" data-field="onetime_flag" {% if item.onetime_flag %}checked{% endif %}></td>
+                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger delete-row" title="Удалить строку">✕</button></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% if mode == 'edit' %}
+            <button type="button" class="btn btn-sm btn-outline-success add-row">＋ Добавить запись</button>
+            {% endif %}
         </div>
-    </div>
-    {% endfor %}
-
-    <h2 class="h4 mb-3">Доходы</h2>
-    {% for bank, items in data.income.items() %}
-    <div class="card p-3 mb-4">
-        <h3 class="h5">{{ bank }}</h3>
-        <div class="table-wrap">
-        <table class="table table-sm align-middle">
-            <thead><tr><th>Дата</th><th>Сумма платежа</th><th>Описание</th><th>Категория</th><th></th></tr></thead>
-            <tbody>
-            {% for item in items %}
-            <tr data-kind="income" data-bank="{{ bank }}">
-                <td><input class="form-control form-control-sm" data-field="date" value="{{ item.date }}"></td>
-                <td><input class="form-control form-control-sm" data-field="value" value="{{ item.value }}"></td>
-                <td><input class="form-control form-control-sm" data-field="description" value="{{ item.description }}"></td>
-                <td><input class="form-control form-control-sm" data-field="category" value="{{ item.category }}"></td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-danger delete-row" title="Удалить строку">✕</button>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        {% endfor %}
         </div>
-    </div>
-    {% endfor %}
+        {% if mode == 'edit' %}
+        <button type="button" class="btn btn-outline-success add-bank" data-kind="outcome">＋ Добавить банк в расходы</button>
+        {% endif %}
+    </section>
 
-    <div class="d-flex gap-2 mb-5 flex-wrap">
+    <section id="income-section" class="mt-4">
+        <h2 class="h4 mb-3">Доходы</h2>
+        <div id="income-banks">
+        {% for bank, items in data.income.items() %}
+        <div class="card p-3 mb-4 bank-card" data-kind="income" data-bank="{{ bank }}">
+            <h3 class="h5 bank-title">{{ bank }}</h3>
+            <div class="table-wrap">
+            <table class="table table-sm align-middle">
+                <thead><tr><th>Дата</th><th>Сумма платежа</th><th>Описание</th><th>Категория</th><th></th></tr></thead>
+                <tbody class="bank-rows">
+                {% for item in items %}
+                <tr data-kind="income" data-bank="{{ bank }}">
+                    <td><input class="form-control form-control-sm" data-field="date" value="{{ item.date }}"></td>
+                    <td><input class="form-control form-control-sm" data-field="value" value="{{ item.value }}"></td>
+                    <td><input class="form-control form-control-sm" data-field="description" value="{{ item.description }}"></td>
+                    <td><input class="form-control form-control-sm" data-field="category" value="{{ item.category }}"></td>
+                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger delete-row" title="Удалить строку">✕</button></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% if mode == 'edit' %}
+            <button type="button" class="btn btn-sm btn-outline-success add-row">＋ Добавить запись</button>
+            {% endif %}
+        </div>
+        {% endfor %}
+        </div>
+        {% if mode == 'edit' %}
+        <button type="button" class="btn btn-outline-success add-bank" data-kind="income">＋ Добавить банк в доходы</button>
+        {% endif %}
+    </section>
+
+    <div class="d-flex gap-2 mb-5 flex-wrap mt-4">
         {% if mode == 'edit' %}
             <button type="submit" class="btn btn-success">Сохранить изменения</button>
         {% else %}
@@ -85,14 +101,178 @@
     </div>
 </form>
 
+{% if mode == 'edit' %}
 <script>
 (function () {
     const form = document.getElementById('review-form');
     const payloadInput = document.getElementById('review-payload');
 
-    // Удаляем строку только визуально. При подготовке payload она просто
-    // не попадёт в JSON, поэтому серверу не нужно получать отдельное поле
-    // для каждой строки.
+    function createInput(field, value, type) {
+        const td = document.createElement('td');
+        if (type === 'checkbox') td.className = 'text-center';
+        const input = document.createElement('input');
+        input.className = type === 'checkbox' ? '' : 'form-control form-control-sm';
+        input.type = type || 'text';
+        input.dataset.field = field;
+        if (type === 'checkbox') input.checked = Boolean(value);
+        else input.value = value || '';
+        td.appendChild(input);
+        return td;
+    }
+
+    function createRow(kind, bank) {
+        const row = document.createElement('tr');
+        row.dataset.kind = kind;
+        row.dataset.bank = bank;
+        if (kind === 'outcome') {
+            row.appendChild(createInput('date', '', 'text'));
+            row.appendChild(createInput('value', '', 'text'));
+            row.appendChild(createInput('description', '', 'text'));
+            row.appendChild(createInput('comment', '', 'text'));
+            row.appendChild(createInput('category', '', 'text'));
+            row.appendChild(createInput('unnecessary_flag', false, 'checkbox'));
+            row.appendChild(createInput('onetime_flag', false, 'checkbox'));
+        } else {
+            row.appendChild(createInput('date', '', 'text'));
+            row.appendChild(createInput('value', '', 'text'));
+            row.appendChild(createInput('description', '', 'text'));
+            row.appendChild(createInput('category', '', 'text'));
+        }
+        const td = document.createElement('td');
+        td.className = 'text-center';
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn btn-sm btn-outline-danger delete-row';
+        del.title = 'Удалить строку';
+        del.textContent = '✕';
+        td.appendChild(del);
+        row.appendChild(td);
+        return row;
+    }
+
+    function attachRowHandlers(root) {
+        root.querySelectorAll('.delete-row').forEach(function (button) {
+            if (button.dataset.bound === '1') return;
+            button.dataset.bound = '1';
+            button.addEventListener('click', function () {
+                button.closest('tr').remove();
+            });
+        });
+
+        root.querySelectorAll('.add-row').forEach(function (button) {
+            if (button.dataset.bound === '1') return;
+            button.dataset.bound = '1';
+            button.addEventListener('click', function () {
+                const card = button.closest('.bank-card');
+                const tbody = card.querySelector('.bank-rows');
+                tbody.appendChild(createRow(card.dataset.kind, card.dataset.bank));
+                attachRowHandlers(tbody);
+                const newRow = tbody.lastElementChild;
+                const firstInput = newRow.querySelector('input[data-field="date"]');
+                if (firstInput) firstInput.focus();
+            });
+        });
+    }
+
+    function makeBankCard(kind, bank) {
+        const card = document.createElement('div');
+        card.className = 'card p-3 mb-4 bank-card';
+        card.dataset.kind = kind;
+        card.dataset.bank = bank;
+
+        const title = document.createElement('h3');
+        title.className = 'h5 bank-title';
+        title.textContent = bank;
+        card.appendChild(title);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'table-wrap';
+        const table = document.createElement('table');
+        table.className = 'table table-sm align-middle';
+        const head = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        const headers = kind === 'outcome'
+            ? ['Дата','Сумма платежа','Описание','Комментарий','Категория','Лишнее','Единоразовое','']
+            : ['Дата','Сумма платежа','Описание','Категория',''];
+        headers.forEach(function (text) {
+            const th = document.createElement('th');
+            th.textContent = text;
+            headRow.appendChild(th);
+        });
+        head.appendChild(headRow);
+        table.appendChild(head);
+
+        const tbody = document.createElement('tbody');
+        tbody.className = 'bank-rows';
+        tbody.appendChild(createRow(kind, bank));
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+        card.appendChild(wrap);
+
+        const addRow = document.createElement('button');
+        addRow.type = 'button';
+        addRow.className = 'btn btn-sm btn-outline-success add-row';
+        addRow.textContent = '＋ Добавить запись';
+        card.appendChild(addRow);
+        return card;
+    }
+
+    document.querySelectorAll('.add-bank').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const kind = button.dataset.kind;
+            const container = document.getElementById(kind === 'outcome' ? 'outcome-banks' : 'income-banks');
+            const existing = Array.from(container.querySelectorAll('.bank-card')).map(function (card) {
+                return card.dataset.bank.trim().toLowerCase();
+            });
+
+            const bank = window.prompt(kind === 'outcome' ? 'Название банка для расходов:' : 'Название банка для доходов:');
+            if (bank === null) return;
+            const cleanBank = bank.trim();
+            if (!cleanBank) return;
+            if (existing.includes(cleanBank.toLowerCase())) {
+                window.alert('Этот банк уже добавлен в данный раздел.');
+                return;
+            }
+
+            const card = makeBankCard(kind, cleanBank);
+            container.appendChild(card);
+            attachRowHandlers(card);
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const firstInput = card.querySelector('input[data-field="date"]');
+            if (firstInput) firstInput.focus();
+        });
+    });
+
+    attachRowHandlers(document);
+
+    form.addEventListener('submit', function () {
+        const payload = { outcome: {}, income: {} };
+
+        document.querySelectorAll('.bank-card').forEach(function (card) {
+            const kind = card.dataset.kind;
+            const bank = card.dataset.bank;
+            if (!payload[kind][bank]) payload[kind][bank] = [];
+
+            card.querySelectorAll('tr[data-kind][data-bank]').forEach(function (row) {
+                if (row.dataset.deleted === '1') return;
+                const item = {};
+                row.querySelectorAll('[data-field]').forEach(function (input) {
+                    const field = input.dataset.field;
+                    item[field] = input.type === 'checkbox' ? input.checked : input.value;
+                });
+                payload[kind][bank].push(item);
+            });
+        });
+
+        payloadInput.value = JSON.stringify(payload);
+    });
+})();
+</script>
+{% else %}
+<script>
+(function () {
+    const form = document.getElementById('review-form');
+    const payloadInput = document.getElementById('review-payload');
     document.querySelectorAll('.delete-row').forEach(function(button) {
         button.addEventListener('click', function() {
             const row = button.closest('tr');
@@ -100,30 +280,23 @@
             row.classList.add('d-none');
         });
     });
-
     form.addEventListener('submit', function() {
         const payload = { outcome: {}, income: {} };
-
         document.querySelectorAll('tr[data-kind][data-bank]').forEach(function(row) {
             if (row.dataset.deleted === '1') return;
-
             const kind = row.dataset.kind;
             const bank = row.dataset.bank;
             if (!payload[kind][bank]) payload[kind][bank] = [];
-
             const item = {};
             row.querySelectorAll('[data-field]').forEach(function(input) {
                 const field = input.dataset.field;
                 item[field] = input.type === 'checkbox' ? input.checked : input.value;
             });
-
             payload[kind][bank].push(item);
         });
-
-        // В форме теперь всего несколько полей: draft_id + один payload.
-        // Поэтому даже тысячи строк выписки не упираются в лимит 1000 form fields.
         payloadInput.value = JSON.stringify(payload);
     });
 })();
 </script>
+{% endif %}
 {% endblock %}
