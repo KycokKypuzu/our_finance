@@ -11,6 +11,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
+from routes_iot import app_router as iot_router
+
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 USERS_FILE = DATA_DIR / "users.json"
@@ -23,6 +25,9 @@ app = FastAPI(title="Мои финансы")
 app.add_middleware(SessionMiddleware, secret_key="local-finance-service-secret")
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+# IoT routes live under /devices and do not change any finance URLs.
+app.include_router(iot_router)
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 

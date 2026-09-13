@@ -11,11 +11,27 @@
 
     <style>
         body { background: #f6f7f9; }
-        .page { max-width: 1150px; margin: 40px auto; }
+        .page { max-width: 1150px; margin: 40px auto; padding: 0 16px; }
         .card { border: 0; box-shadow: 0 4px 18px rgba(0,0,0,.06); }
         .main-buttons a { min-width: 240px; padding: 18px; font-size: 20px; }
         table input { min-width: 90px; }
         .table-wrap { overflow-x: auto; }
+
+        .device-card { transition: transform .12s ease, box-shadow .12s ease; }
+        .device-card:hover { transform: translateY(-1px); box-shadow: 0 7px 24px rgba(0,0,0,.08); }
+        .device-icon {
+            width: 46px; height: 46px; border-radius: 12px;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: #f1f3f5; font-size: 22px; flex: 0 0 auto;
+        }
+        .status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-on .status-dot { background: #198754; }
+        .status-off .status-dot { background: #adb5bd; }
+        .device-type { font-size: .82rem; color: #6c757d; }
+        .device-property { background: #f8f9fa; border-radius: 10px; padding: 10px 12px; }
+        .device-property .value { font-weight: 600; }
+        .empty-state { padding: 48px 20px; text-align: center; }
+        .home-button { min-width: 210px; padding: 16px; }
     </style>
 </head>
 

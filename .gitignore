@@ -1,4 +1,6 @@
-/.venv/
-/data/
-/sample.csv
-/.idea/
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.pytest_cache/
+data/*.json

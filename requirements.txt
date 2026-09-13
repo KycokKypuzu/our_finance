@@ -5,3 +5,9 @@ python-multipart
 pandas
 openpyxl
 itsdangerous
+aiohttp
+python-dotenv
+pydantic
+pytest
+pytest-asyncio
+httpx

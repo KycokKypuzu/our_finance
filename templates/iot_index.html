@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}IoT Home{% endblock %}
+
+{% block content %}
+{% if devices is defined %}
+<div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Мои устройства</h1>
+            <div class="text-muted">Яндекс Умный дом</div>
+        </div>
+        <a href="/" class="btn btn-outline-secondary">На главную</a>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-danger mb-0" role="alert">
+            <div class="fw-semibold mb-1">Не удалось получить устройства</div>
+            <div>{{ error }}</div>
+        </div>
+    {% elif not devices %}
+        <div class="empty-state">
+            <div class="fs-1 mb-3">⌂</div>
+            <h2 class="h5">Устройства не найдены</h2>
+            <p class="text-muted mb-0">В аккаунте Яндекса пока нет доступных устройств.</p>
+        </div>
+    {% else %}
+        <div class="row g-3">
+            {% for device in devices %}
+                {% set on_off = namespace(value=none) %}
+                {% set power = namespace(value=none) %}
+                {% set voltage = namespace(value=none) %}
+                {% set amperage = namespace(value=none) %}
+
+                {% for capability in device.capabilities %}
+                    {% if capability.type == 'devices.capabilities.on_off' %}
+                        {% set on_off.value = capability.state.get('value') %}
+                    {% endif %}
+                {% endfor %}
+
+                {% for property in device.properties %}
+                    {% if property.parameters.get('instance') == 'power' %}
+                        {% set power.value = property.state.get('value') %}
+                    {% elif property.parameters.get('instance') == 'voltage' %}
+                        {% set voltage.value = property.state.get('value') %}
+                    {% elif property.parameters.get('instance') == 'amperage' %}
+                        {% set amperage.value = property.state.get('value') %}
+                    {% endif %}
+                {% endfor %}
+
+                <div class="col-md-6">
+                    <article class="card device-card h-100 p-4">
+                        <div class="d-flex justify-content-between gap-3 mb-3">
+                            <div class="d-flex gap-3">
+                                <div class="device-icon">
+                                    {% if 'light' in device.type %}💡
+                                    {% elif 'tv' in device.type %}📺
+                                    {% elif 'media_device' in device.type %}🎵
+                                    {% else %}⌂
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h2 class="h5 mb-1">{{ device.name }}</h2>
+                                    {% if device.room %}
+                                        <div class="text-muted small">{{ device.room }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if on_off.value is not none %}
+                                <div class="small {% if on_off.value %}status-on{% else %}status-off{% endif %}">
+                                    <span class="status-dot"></span>
+                                    {{ 'Включено' if on_off.value else 'Выключено' }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="device-type mb-3">{{ device.type }}</div>
+
+                        {% if power.value is not none or voltage.value is not none or amperage.value is not none %}
+                        <div class="row g-2 mb-3">
+                            {% if power.value is not none %}
+                            <div class="col-4">
+                                <div class="device-property">
+                                    <div class="text-muted small">Мощность</div>
+                                    <div class="value">{{ "%.1f"|format(power.value) }} Вт</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if voltage.value is not none %}
+                            <div class="col-4">
+                                <div class="device-property">
+                                    <div class="text-muted small">Напряжение</div>
+                                    <div class="value">{{ "%.1f"|format(voltage.value) }} В</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if amperage.value is not none %}
+                            <div class="col-4">
+                                <div class="device-property">
+                                    <div class="text-muted small">Ток</div>
+                                    <div class="value">{{ "%.2f"|format(amperage.value) }} А</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if on_off.value is not none %}
+                            <div class="mt-auto pt-2">
+                                {% if on_off.value %}
+                                    <form method="post" action="/devices/{{ device.id }}/toggle?value=false">
+                                        <button type="submit" class="btn btn-outline-secondary w-100">Выключить</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" action="/devices/{{ device.id }}/toggle?value=true">
+                                        <button type="submit" class="btn btn-primary w-100">Включить</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-muted small mt-auto pt-2">Управление включением не поддерживается.</div>
+                        {% endif %}
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="text-center">
+    <h1 class="h3 mb-1">IoT Home</h1>
+    <p class="text-muted mb-5">Управление устройствами Яндекс Умного дома</p>
+
+    <div class="d-flex flex-column align-items-center gap-3">
+        <a href="/devices" class="btn btn-primary home-button">Мои устройства</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
