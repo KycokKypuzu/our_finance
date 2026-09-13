@@ -52,10 +52,10 @@
                         <div class="d-flex justify-content-between gap-3 mb-3">
                             <div class="d-flex gap-3">
                                 <div class="device-icon">
-                                    {% if 'light' in device.type %}💡
-                                    {% elif 'tv' in device.type %}📺
-                                    {% elif 'media_device' in device.type %}🎵
-                                    {% else %}⌂
+                                    {% if 'light' in device.type %} <i class="fas fa-lightbulb"></i>
+                                    {% elif 'tv' in device.type %} <i class="fas fa-tv"></i>
+                                    {% elif 'media_device' in device.type %} <i class="fas fa-music"></i>
+                                    {% else %} <i class="fas fa-house"></i>
                                     {% endif %}
                                 </div>
                                 <div>
