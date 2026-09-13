@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Выбор сервиса{% endblock %}
+{% block content %}
+<div class="text-center mb-4">
+    <h1 class="h2 mb-2">Выберите сервис</h1>
+    <p class="text-muted mb-0">Финансы и умный дом доступны в одном приложении.</p>
+</div>
+
+<div class="row justify-content-center g-4">
+    <div class="col-md-5">
+        <a href="/finance" class="card h-100 p-4 text-decoration-none text-dark service-card">
+            <div class="fs-1 mb-3">₽</div>
+            <h2 class="h3">Финансы</h2>
+            <p class="text-muted mb-0">Учёт доходов и расходов, отчёты и анализ.</p>
+        </a>
+    </div>
+    <div class="col-md-5">
+        <a href="/devices" class="card h-100 p-4 text-decoration-none text-dark service-card">
+            <div class="fs-1 mb-3">⌂</div>
+            <h2 class="h3">IoT</h2>
+            <p class="text-muted mb-0">Просмотр и управление устройствами умного дома.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import csv
 import json
 import re
 import uuid
@@ -109,17 +110,56 @@ def parse_uploaded_file(upload: UploadFile):
         df = pd.read_excel(BytesIO(content), header=0)
     elif suffix == ".csv":
         from io import BytesIO
-        # Сначала UTF-8, затем распространённая для Windows/RU кодировка.
-        try:
-            df = pd.read_csv(BytesIO(content), header=0, encoding="utf-8-sig")
-        except UnicodeDecodeError:
-            df = pd.read_csv(BytesIO(content), header=0, encoding="cp1251")
+        # Банки экспортируют CSV с разными разделителями: например, Т-Банк
+        # использует «;», а многие другие — запятую. Определяем его по файлу,
+        # чтобы все поля не оказались в одном столбце.
+        for encoding in ("utf-8-sig", "cp1251"):
+            try:
+                text = content.decode(encoding)
+            except UnicodeDecodeError:
+                continue
+
+            try:
+                delimiter = csv.Sniffer().sniff(
+                    text[:8192], delimiters=";,\t|"
+                ).delimiter
+            except csv.Error:
+                delimiter = ","
+
+            df = pd.read_csv(
+                BytesIO(content),
+                header=0,
+                encoding=encoding,
+                sep=delimiter,
+            )
+            break
+        else:
+            raise ValueError("Не удалось определить кодировку CSV-файла.")
     else:
         raise ValueError("Поддерживаются только CSV и XLSX.")
 
     df = df.dropna(how="all")
     df.columns = [str(c).strip() for c in df.columns]
     return df
+
+
+def suggest_column_mapping(columns):
+    """Choose useful defaults for common bank statement headers."""
+    normalized = {str(column).strip().casefold(): str(column) for column in columns}
+    aliases = {
+        "date_col": ("дата операции", "дата", "date"),
+        "value_col": ("сумма операции", "сумма", "amount"),
+        "description_col": ("описание", "описание операции", "comment"),
+        "category_col": ("категория по-умолчанию", "категория", "category"),
+    }
+
+    return {
+        field: next(
+            (normalized[alias] for alias in names if alias in normalized),
+            columns[0] if columns else "",
+        )
+        for field, names in aliases.items()
+    }
 
 
 def normalize_date(value):
@@ -137,13 +177,19 @@ def normalize_date(value):
             pass
 
     text = str(value).strip()
-    for fmt in ("%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d", "%d.%m.%y"):
+    for fmt in (
+        "%d.%m.%Y %H:%M:%S",
+        "%d.%m.%Y",
+        "%d/%m/%Y",
+        "%Y-%m-%d",
+        "%d.%m.%y",
+    ):
         try:
             return datetime.strptime(text, fmt).strftime("%d.%m.%Y")
         except ValueError:
             pass
 
-    parsed = pd.to_datetime(text, errors="coerce", dayfirst=False)
+    parsed = pd.to_datetime(text, errors="coerce", dayfirst=True)
     if not pd.isna(parsed):
         return parsed.strftime("%d.%m.%Y")
 
@@ -252,6 +298,15 @@ def all_finance_files(username):
 
 
 @app.get("/", response_class=HTMLResponse)
+def service_choice(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="service_choice.html",
+        context={"request": request},
+    )
+
+
+@app.get("/finance", response_class=HTMLResponse)
 def login_page(request: Request):
     return templates.TemplateResponse(
         request=request,
@@ -264,7 +319,7 @@ def login_page(request: Request):
 def login(request: Request, username: str = Form(...)):
     username = username.strip()
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     remember_user(username)
     request.session["username"] = username
@@ -275,7 +330,7 @@ def login(request: Request, username: str = Form(...)):
 def home(request: Request):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     return templates.TemplateResponse(
         request=request,
@@ -288,7 +343,7 @@ def home(request: Request):
 def new_entry_page(request: Request):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     return templates.TemplateResponse(
         request=request,
@@ -313,7 +368,7 @@ async def upload_file(
 ):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     bank = bank.strip()
     if not bank:
@@ -405,6 +460,7 @@ async def upload_file(
             "draft_id": draft_id,
             "bank": bank,
             "columns": columns,
+            "suggested_mapping": suggest_column_mapping(columns),
             "sample_rows": df.fillna("").head(8).astype(str).to_dict(orient="records"),
         },
     )
@@ -414,7 +470,7 @@ async def upload_file(
 def add_bank_page(request: Request, draft_id: str):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     draft = DRAFTS.get(draft_id)
     if not draft or draft.get("username") != username or "data" not in draft:
@@ -445,7 +501,7 @@ def process_file(
 ):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     draft = DRAFTS.get(draft_id)
     if not draft or draft.get("username") != username or "upload" not in draft:
@@ -619,7 +675,7 @@ def analysis_data(data):
 async def save_new(request: Request):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     form = await request.form()
     draft_id = str(form.get("draft_id", ""))
@@ -650,7 +706,7 @@ async def save_new(request: Request):
 async def continue_new(request: Request):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     form = await request.form()
     draft_id = str(form.get("draft_id", ""))
@@ -682,7 +738,7 @@ async def continue_new(request: Request):
 def new_overview(request: Request, draft_id: str):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     draft = DRAFTS.get(draft_id)
     if not draft or "data" not in draft:
@@ -699,7 +755,7 @@ def new_overview(request: Request, draft_id: str):
 def edit_finance(request: Request, month: int, year: int):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     data = load_finance(username, month, year)
     if data is None:
@@ -722,7 +778,7 @@ def edit_finance(request: Request, month: int, year: int):
 async def save_edited_finance(request: Request):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     form = await request.form()
     draft_id = str(form.get("draft_id", ""))
@@ -752,7 +808,7 @@ async def save_edited_finance(request: Request):
 def finance_analysis(request: Request, month: int, year: int):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     data = load_finance(username, month, year)
     if data is None:
@@ -773,7 +829,7 @@ def finance_analysis(request: Request, month: int, year: int):
 def finances(request: Request):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     return templates.TemplateResponse(
         request=request,
@@ -790,7 +846,7 @@ def finances(request: Request):
 def finance_view(request: Request, month: int, year: int):
     username = request.session.get("username")
     if not username:
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/finance", status_code=303)
 
     data = load_finance(username, month, year)
     if data is None:
