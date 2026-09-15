@@ -40,4 +40,7 @@ async def toggle_device(device_id: str, value: bool) -> RedirectResponse:
     except (YandexAPIError, RuntimeError) as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-    return RedirectResponse(url="/devices", status_code=303)
+    # Передаём короткое состояние помощнику на следующую страницу.
+    # Это не меняет API устройства и не сохраняется в данных пользователя.
+    action = "on" if value else "off"
+    return RedirectResponse(url=f"/devices?boar={action}", status_code=303)
