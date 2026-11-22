@@ -4,7 +4,11 @@ from typing import Any
 import aiohttp
 from dotenv import load_dotenv
 
-from domains.api_constants import DEVICE_ACTION_URL, DEVICE_INFO_URL, USER_INFO_URL
+# Эндпоинты API Яндекс Умного дома
+BASE_URL = "https://api.iot.yandex.net/v1.0"
+USER_INFO_URL = f"{BASE_URL}/user/info"
+DEVICE_INFO_URL = f"{BASE_URL}/devices/{{device_id}}"
+DEVICE_ACTION_URL = f"{BASE_URL}/devices/actions"
 
 
 load_dotenv()

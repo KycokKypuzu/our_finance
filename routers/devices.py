@@ -1,15 +1,15 @@
 from fastapi import APIRouter, HTTPException, Request
 from starlette.responses import HTMLResponse, RedirectResponse
 
-from domains.api_interaction import API, YandexAPIError
-from templating import templates
+from services.yandex_api import API, YandexAPIError
+from config import templates
 
 
-app_router = APIRouter(prefix="/devices", tags=["devices"])
+router = APIRouter(prefix="/devices", tags=["devices"])
 
 
-@app_router.get("", response_class=HTMLResponse)
-@app_router.get("/", response_class=HTMLResponse)
+@router.get("", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def list_devices(request: Request) -> HTMLResponse:
     try:
         info = await API.get_user_info()
@@ -33,7 +33,7 @@ async def list_devices(request: Request) -> HTMLResponse:
     )
 
 
-@app_router.post("/{device_id}/toggle")
+@router.post("/{device_id}/toggle")
 async def toggle_device(device_id: str, value: bool) -> RedirectResponse:
     try:
         await API.set_on_off(device_id, value)
