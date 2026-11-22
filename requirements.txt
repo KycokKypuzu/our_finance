@@ -7,3 +7,6 @@ openpyxl
 itsdangerous
 aiohttp
 python-dotenv
+
+starlette
+httpx

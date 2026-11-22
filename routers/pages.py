@@ -27,6 +27,32 @@ def login_page(request: Request):
     )
 
 
+@router.get("/weather")
+async def weather_page(request: Request):
+    client = request.app.state.http_client
+
+    response = await client.get(
+        "https://api.open-meteo.com/v1/forecast",
+        params={
+            "latitude": 55.75,
+            "longitude": 37.62,
+            "current": (
+                "temperature_2m,"
+                "relative_humidity_2m,"
+                "precipitation,"
+                "weather_code,"
+                "wind_speed_10m"
+            ),
+            "timezone": "Europe/Moscow",
+        },
+    )
+
+    response.raise_for_status()
+    data = response.json()
+
+    return data
+
+
 @router.post("/login")
 def login(request: Request, username: str = Form(...)):
     username = username.strip()
